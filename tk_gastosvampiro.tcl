@@ -1,6 +1,8 @@
 #!/usr/bin/tclsh
 
+package require Tcl
 package require Tk
+package require json
 
 # ----- Paleta de colores -----
 set BG_MAIN 	"#EEE9FE"
@@ -159,13 +161,35 @@ pack .frame.frmtabla -fill "both" -expand 1
 pack .frame -fill x
 
 proc _salir {} {
-	destroy .
+	if { [tk_messageBox -message "Salir" -detail "¿Estás seguro de que quieres salir?" -title "Gastos Vampiro" -icon question -type okcancel] == "ok"} {
+		destroy .
+	}
 }
 
 proc _exportar_pdf {} {
-	puts "Exportar en PDF"
+	tk_messageBox -message "Error" -detail "No implementado" -title "Gastos Vampiro" -icon error
 }
 
 proc _mostrar_acerca_de {} {
-	puts "Acerca de Gatos Vampiro"
+	tk_messageBox -message "Acerca de Gastos Vampiro" -icon info -detail "Gastos vampiro v1.0\nRastreador de suscripciones que\nchupan tu dinero\nDesarrollado con TCL/TK" -title "Acerca de..."
+}
+
+proc _agregar_suscripcion {} {
+
+}
+
+proc _actualizar_tabla {} {
+
+}
+
+proc _eliminar_suscripcion {} {
+
+}
+
+proc _cargar_suscripciones {} {
+
+}
+
+proc _guarda_suscripciones {} {
+	
 }
