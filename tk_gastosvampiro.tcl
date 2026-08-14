@@ -26,6 +26,9 @@ set BORDER_LIGHT	"#D8D3E8" ;# Borde suave para entradas de texto
 # Ruta de datos
 set RUTA_DATOS "gastos.json"
 
+#variables globales
+set suscripciones {}
+
 # Procedimientos
 
 proc _salir {} {
@@ -42,21 +45,60 @@ proc _mostrar_acerca_de {} {
 	tk_messageBox -message "Acerca de Gastos Vampiro" -icon info -detail "Gastos vampiro v1.0\nRastreador de suscripciones que\nchupan tu dinero\nDesarrollado con TCL/TK" -title "Acerca de..."
 }
 
-proc _agregar_suscripcion {} {
-
-}
-
 proc _actualizar_tabla {} {
+	.frame.frmtabla.frame.tree delete [.frame.frmtabla.frame.tree children {}]
+
+	set total 0.00
+
+	if {[llength $::suscripciones] > 0} {
+		place forget .frame.frmtabla.frame.lbl_vacio
+
+		for {set i 0} {$i < [llength $::suscripciones]} {incr i} {
+			set costo [expr {double([dict get [lindex $::suscripciones $i] costo])}]
+			set total [expr {$costo + $total}]
+			.frame.frmtabla.frame.tree insert {} end -text "" -values [list [expr {$i + 1}] [dict get [lindex $::suscripciones $i] nombre] $costo [dict get [lindex $::suscripciones $i] fecha] ]
+		}
+	} else {
+		place .frame.frmtabla.frame.lbl_vacio -relx 0.5 -rely 0.5 -anchor "center"
+	}
+
+	.frame.frmtabla.resumen.lbl_total configure -text "Total Mensual: \$[format "%.2f" $total] MXN"
+
+	if {$total > 0} {
+		.frame.frmtabla.footer.lbl_anual configure -text "Gasto anual estimado: \$[format "%.2f" [expr $total * 12]] MXN"
+	} else {
+		.frame.frmtabla.footer.lbl_anual configure -text ""
+	}
+
+	wm title . "Gastos vampiro - \$[format "%.2f" $total] MXN/mes"
 
 }
 
 proc _eliminar_suscripcion {} {
+	set seleccion [.frame.frmtabla.frame.tree selection]
+
+	if {[llength $seleccion] <= 0} {
+		tk_messageBox -message "Sin selección." -detail "Selecciona una suscripción de la tabla para eliminarla." -title "Error" -icon warning -type ok
+		return {}
+	}
+
+	set valores [.frame.frmtabla.frame.tree item [lindex $seleccion 0] -values]
+	set nombre [lindex $valores 1]
+
+	set confirmar [tk_messageBox -message "Confirmar eliminación." -detail "¿Eliminar la suscripción $nombre?" -title "Confirmar eliminación" -icon warning -type yesno]
+	if {$confirmar == "yes"} {
+		set idx [expr {[lindex $valores 0] - 1}]
+		if { [expr 0 <= $idx] || [expr $idx < [llength $::suscripciones]]} {
+			set ::suscripciones [lreplace $::suscripciones $idx $idx]
+			_guardar_suscripciones $::suscripciones
+			_actualizar_tabla
+		}
+	}
 
 }
 
 proc _cargar_suscripciones {} {
 	if {[file exists $::RUTA_DATOS] && [file isfile $::RUTA_DATOS]} {
-    	puts "It exists and it is a file."
 		set fp [open $::RUTA_DATOS r]
 		set datos [read $fp]
 		close $fp
@@ -83,10 +125,50 @@ proc json_parser {data} {
 	return $myobject
 }
 
-proc _guarda_suscripciones {data} {
+proc _guardar_suscripciones {data} {
 	set fp [open $::RUTA_DATOS w+]
 	puts $fp [json_parser $data]
 	close $fp
+}
+
+proc _agregar_suscripcion {} {
+	set nombre [string trim [.frame.formulario.entry_nombre get] " "]
+	set costo_str [string trim [.frame.formulario.entry_costo get] " "]
+
+	if {$nombre eq ""} {
+		tk_messageBox -message "Campo vacío." -detail "Por favor ingrese el nombre de la suscripción." -title "Error" -icon warning -type ok
+		focus .frame.formulario.entry_nombre
+		return {}
+	}
+
+	if {$costo_str eq ""} {
+		tk_messageBox -message "Campo vacío." -detail "Por favor ingrese el costo de la suscripción." -title "Error" -icon warning -type ok
+		focus .frame.formulario.entry_costo
+		return {}
+	}
+
+	if {[string is double -strict $costo_str]} {
+		set costo [expr {double($costo_str)}]
+	} else {
+		tk_messageBox -message "Error de formato." -detail "$costo_str no es un número válido.\n\nEjemplo: 15.99" -title "Error" -icon error -type ok
+		.frame.formulario.entry_costo delete 0 end
+		focus .entry_costo
+		return {}
+	}
+
+	set fecha [clock format [clock seconds] -format "%d/%m/%Y"]
+
+	set suscripcion [dict create nombre $nombre costo $costo fecha $fecha]
+
+	lappend ::suscripciones $suscripcion
+
+	_guardar_suscripciones $::suscripciones
+
+	.frame.formulario.entry_nombre delete 0 end
+	.frame.formulario.entry_costo delete 0 end
+	focus .frame.formulario.entry_nombre
+
+	_actualizar_tabla	
 }
 
 # Ventana principal
@@ -163,7 +245,10 @@ grid [ttk::label .frame.formulario.costo -text "Costo (MXN $):" -style "Card.TLa
 # --- Fila 1 ---
 grid [ttk::entry .frame.formulario.entry_nombre -width 30 -style "Card.TEntry"] -row 1 -column 0 -sticky ew -columnspan 2 -padx 8 -pady 8
 grid [ttk::entry .frame.formulario.entry_costo -width 14 -style "Card.TEntry"] -row 1 -column 2 -sticky ew -padx 8 -pady 8
-grid [ttk::button .frame.formulario.agregar -text "Agregar" -cursor "hand2" -style "Accent.TButton"] -row 1 -column 3 -sticky e -padx 8 -pady 8
+grid [ttk::button .frame.formulario.agregar -text "Agregar" -cursor "hand2" -style "Accent.TButton" -command {_agregar_suscripcion}] -row 1 -column 3 -sticky e -padx 8 -pady 8
+
+bind .frame.formulario.entry_costo <Return> {_agregar_suscripcion}
+bind .frame.formulario.entry_nombre <Return> {focus .frame.formulario.entry_costo}
 
 grid columnconfigure .frame.formulario 0 -weight 0
 grid columnconfigure .frame.formulario 1 -weight 1
@@ -203,7 +288,7 @@ pack [ttk::scrollbar .frame.frmtabla.frame.scrollbar -orient "vertical" -command
 .frame.frmtabla.frame.tree configure -yscrollcommand [list .frame.frmtabla.frame.scrollbar set]
 
 # Label para cuando no hay datos
-ttk::label .frame.frmtabla.frame.lbl_vacio -text "No hay suscripciones registradas\nAgrega una para comenzar" -justify "center"
+ttk::label .frame.frmtabla.frame.lbl_vacio -text "No hay suscripciones registradas\nAgrega una para comenzar" -justify "center" -style Main.TLabel
 
 pack .frame.frmtabla.frame -fill "both" -expand 1 -padx 16 -pady {8 5}
 
@@ -211,17 +296,13 @@ pack .frame.frmtabla.frame -fill "both" -expand 1 -padx 16 -pady {8 5}
 # --- Footer ---
 ttk::frame .frame.frmtabla.footer -style "Main.TFrame"
 
-pack [ttk::button .frame.frmtabla.footer.btnelimina -text "Eliminar Seleccionada" -cursor "hand2" -style "Danger.TButton"] -side "left" -pady 10
+pack [ttk::button .frame.frmtabla.footer.btnelimina -text "Eliminar Seleccionada" -cursor "hand2" -style "Danger.TButton" -command {_eliminar_suscripcion}] -side "left" -pady 10
 pack [ttk::label .frame.frmtabla.footer.lbl_anual -text "" -style "Anual.TLabel"] -side "left" -expand 1
 
 pack .frame.frmtabla.footer -fill x -padx 16 -pady {0 12}
 pack .frame.frmtabla -fill "both" -expand 1
 pack .frame -fill x
 
-puts [_cargar_suscripciones]
+set suscripciones [_cargar_suscripciones]
 
-#set datitos {{nombre {Prime Video} costo 25.0 fecha 17/07/2026} {nombre Netflix costo 32.0 fecha 17/07/2026}}
-
-#_guarda_suscripciones $datitos
-
-#puts [json_parser $datitos]
+_actualizar_tabla

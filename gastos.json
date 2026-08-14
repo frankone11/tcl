@@ -1,12 +1,37 @@
 [
 {
-    "nombre" : "Prime Video",
-    "costo"  : "25.0",
-    "fecha"  : "17/07/2026"
+    "nombre" : "Spotify",
+    "costo"  : "50.0",
+    "fecha"  : "14/08/2026"
 },
 {
-    "nombre" : "Netflix",
-    "costo"  : "32.0",
-    "fecha"  : "17/07/2026"
+    "nombre" : "Netfix",
+    "costo"  : "100.0",
+    "fecha"  : "14/08/2026"
+},
+{
+    "nombre" : "Amazon music",
+    "costo"  : "60.0",
+    "fecha"  : "14/08/2026"
+},
+{
+    "nombre" : "Prime video",
+    "costo"  : "40.0",
+    "fecha"  : "14/08/2026"
+},
+{
+    "nombre" : "Vix",
+    "costo"  : "120.0",
+    "fecha"  : "14/08/2026"
+},
+{
+    "nombre" : "Tidal",
+    "costo"  : "150.0",
+    "fecha"  : "14/08/2026"
+},
+{
+    "nombre" : "Claro Video",
+    "costo"  : "10.0",
+    "fecha"  : "14/08/2026"
 }
 ]
