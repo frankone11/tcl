@@ -5,33 +5,21 @@ package require Tk
 package require json
 
 # ----- Paleta de colores -----
-set BG_MAIN 	"#EEE9FE"
-# Fondo principal lavanda suave
-set BG_WHITE 	"#FCFCFD"
-# Tarjetas y superficies blancas
-set ACCENT		"#7C4DFF"
-# Púrpura vibrante - color principal
-set GREEN		"#00C9A7"
-# Verde menta - acciones positivas
-set CORAL		"#FF6B6B"
-# Coral - acciones descriptivas / alertas
-set TEXT_DARK	"#06040D"
-# Texto principal oscuro
-set TEXT_LIGHT	"#FAFAFA"
-# Texto secundario, placeholders, bordes, sombras
+set BG_MAIN 	"#EEE9FE" ;# Fondo principal lavanda suave
+set BG_WHITE 	"#FCFCFD" ;# Tarjetas y superficies blancas
+set ACCENT		"#7C4DFF" ;# Púrpura vibrante - color principal
+set GREEN		"#00C9A7" ;# Verde menta - acciones positivas
+set CORAL		"#FF6B6B" ;# Coral - acciones descriptivas / alertas
+set TEXT_DARK	"#06040D" ;# Texto principal oscuro
+set TEXT_LIGHT	"#FAFAFA" ;# Texto secundario, placeholders, bordes, sombras
 
 # Colores derivados
 
-set ACCENT_HOVER	"#651FFF"
-# Acento más oscuro para hover
-set GREEN_HOVER		"#00B396"
-# Verde más oscuro para hover
-set CORAL_HOVER		"#E55A5A"
-# Coral más oscuro para hover
-set BG_ENTRY		"#F0ECFA"
-# Fondo sutil para entradas de texto
-set BORDER_LIGHT	"#D8D3E8"
-# Borde suave para entradas de texto
+set ACCENT_HOVER	"#651FFF" ;# Acento más oscuro para hover
+set GREEN_HOVER		"#00B396" ;# Verde más oscuro para hover
+set CORAL_HOVER		"#E55A5A" ;# Coral más oscuro para hover
+set BG_ENTRY		"#F0ECFA" ;# Fondo sutil para entradas de texto
+set BORDER_LIGHT	"#D8D3E8" ;# Borde suave para entradas de texto
 
 wm title . "Gastos vampiro"
 wm geometry . 700x680
