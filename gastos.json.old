@@ -1,0 +1,37 @@
+[
+  {
+    "nombre": "Prime Video",
+    "costo": 25.0,
+    "fecha": "17/07/2026"
+  },
+  {
+    "nombre": "Netflix",
+    "costo": 32.0,
+    "fecha": "17/07/2026"
+  },
+  {
+    "nombre": "HBO Max",
+    "costo": 40.0,
+    "fecha": "18/07/2026"
+  },
+  {
+    "nombre": "Claro Video",
+    "costo": 8.0,
+    "fecha": "18/07/2026"
+  },
+  {
+    "nombre": "Spotify",
+    "costo": 20.0,
+    "fecha": "18/07/2026"
+  },
+  {
+    "nombre": "Prime Music",
+    "costo": 24.0,
+    "fecha": "18/07/2026"
+  },
+  {
+    "nombre": "Tidal",
+    "costo": 50.0,
+    "fecha": "18/07/2026"
+  }
+]

@@ -3,6 +3,7 @@
 package require Tcl
 package require Tk
 package require json
+package require json::write
 
 # ----- Paleta de colores -----
 set BG_MAIN 	"#EEE9FE" ;# Fondo principal lavanda suave
@@ -12,6 +13,7 @@ set GREEN		"#00C9A7" ;# Verde menta - acciones positivas
 set CORAL		"#FF6B6B" ;# Coral - acciones descriptivas / alertas
 set TEXT_DARK	"#06040D" ;# Texto principal oscuro
 set TEXT_LIGHT	"#FAFAFA" ;# Texto secundario, placeholders, bordes, sombras
+set TEXT_WHITE	"#FFFFFF" ;# Texto blanco
 
 # Colores derivados
 
@@ -20,6 +22,74 @@ set GREEN_HOVER		"#00B396" ;# Verde más oscuro para hover
 set CORAL_HOVER		"#E55A5A" ;# Coral más oscuro para hover
 set BG_ENTRY		"#F0ECFA" ;# Fondo sutil para entradas de texto
 set BORDER_LIGHT	"#D8D3E8" ;# Borde suave para entradas de texto
+
+# Ruta de datos
+set RUTA_DATOS "gastos.json"
+
+# Procedimientos
+
+proc _salir {} {
+	if { [tk_messageBox -message "Salir" -detail "¿Estás seguro de que quieres salir?" -title "Gastos Vampiro" -icon question -type okcancel] == "ok"} {
+		destroy .
+	}
+}
+
+proc _exportar_pdf {} {
+	tk_messageBox -message "Error" -detail "No implementado" -title "Gastos Vampiro" -icon error
+}
+
+proc _mostrar_acerca_de {} {
+	tk_messageBox -message "Acerca de Gastos Vampiro" -icon info -detail "Gastos vampiro v1.0\nRastreador de suscripciones que\nchupan tu dinero\nDesarrollado con TCL/TK" -title "Acerca de..."
+}
+
+proc _agregar_suscripcion {} {
+
+}
+
+proc _actualizar_tabla {} {
+
+}
+
+proc _eliminar_suscripcion {} {
+
+}
+
+proc _cargar_suscripciones {} {
+	if {[file exists $::RUTA_DATOS] && [file isfile $::RUTA_DATOS]} {
+    	puts "It exists and it is a file."
+		set fp [open $::RUTA_DATOS r]
+		set datos [read $fp]
+		close $fp
+
+		return [::json::json2dict $datos]
+	} else {
+		puts "File doesn't exist."
+		return {}
+	}
+}
+
+proc json_parser {data} {
+	::json::write indented 1
+	::json::write aligned 1
+	set myobject "\[\n"
+	set datalength [llength $data]
+	for {set i 0} {$i < $datalength} {incr i} {
+		set myobject [append myobject [::json::write object-strings "nombre" [dict get [lindex $data $i] nombre] "costo" [dict get [lindex $data $i] costo] "fecha" [dict get [lindex $data $i] fecha] ] ]
+		if {$i < [expr {$datalength - 1}]} {
+			set myobject [append myobject ",\n"]
+		}
+	}
+	set myobject [append myobject "\n\]"]
+	return $myobject
+}
+
+proc _guarda_suscripciones {data} {
+	set fp [open $::RUTA_DATOS w+]
+	puts $fp [json_parser $data]
+	close $fp
+}
+
+# Ventana principal
 
 wm title . "Gastos vampiro"
 wm geometry . 700x680
@@ -42,11 +112,11 @@ ttk::style configure Card.TLabel -background $BG_MAIN -foreground $TEXT_DARK -fo
 ttk::style configure Card.TEntry -fieldbackground $BG_WHITE -bordercolor $BORDER_LIGHT -lightcolor $BORDER_LIGHT -darkcolor $BORDER_LIGHT -font {"Segoe UI" 12} -padding {8 6}
 ttk::style map Card.TEntry -bordercolor [list focus $ACCENT] -lightcolor [list focus $ACCENT]
 
-ttk::style configure Accent.TButton -background $ACCENT -foreground "#FFFFFF" -font {"Segoe UI" 12 "bold"} -padding {16 8} -borderwidth 0
-ttk::style map Accent.TButton -background [list active $ACCENT_HOVER pressed $ACCENT_HOVER] -foreground [list active "#FFFFFF"]
+ttk::style configure Accent.TButton -background $ACCENT -foreground $TEXT_WHITE -font {"Segoe UI" 12 "bold"} -padding {16 8} -borderwidth 0
+ttk::style map Accent.TButton -background [list active $ACCENT_HOVER pressed $ACCENT_HOVER] -foreground [list active $TEXT_WHITE]
 
-ttk::style configure Danger.TButton -background $CORAL -foreground "#FFFFFF" -font {"Segoe UI" 12 "bold"} -padding {16 0} -borderwidth 0
-ttk::style map Danger.TButton -background [list active $CORAL_HOVER pressed $CORAL_HOVER] -foreground [list active "#FFFFFF"]
+ttk::style configure Danger.TButton -background $CORAL -foreground $TEXT_WHITE -font {"Segoe UI" 12 "bold"} -padding {16 0} -borderwidth 0
+ttk::style map Danger.TButton -background [list active $CORAL_HOVER pressed $CORAL_HOVER] -foreground [list active $TEXT_WHITE]
 
 ttk::style configure Main.TLabel -background $BG_MAIN -foreground $TEXT_DARK -font {"Segoe UI" 12}
 ttk::style configure MainBold.TLabel -background $BG_MAIN -foreground $TEXT_DARK -font {"Segoe UI" 12 "bold"}
@@ -55,7 +125,7 @@ ttk::style configure Anual.TLabel -background $BG_MAIN -foreground $TEXT_DARK -f
 
 ttk::style configure Treeview -background $BG_WHITE -foreground $TEXT_DARK -fieldbackground $BG_WHITE -rowheight 32 -font {"Segoe UI" 12}
 ttk::style configure Treeview.Heading -background $BG_MAIN -foreground $TEXT_DARK -font {"Segoe UI" 11 "bold"} -relief "flat"
-ttk::style map Treeview -background [list selected $ACCENT] -foreground [list selected "#FFFFFF"]
+ttk::style map Treeview -background [list selected $ACCENT] -foreground [list selected $TEXT_WHITE]
 
 ttk::frame .frame -style "Main.TFrame"
 
@@ -148,36 +218,10 @@ pack .frame.frmtabla.footer -fill x -padx 16 -pady {0 12}
 pack .frame.frmtabla -fill "both" -expand 1
 pack .frame -fill x
 
-proc _salir {} {
-	if { [tk_messageBox -message "Salir" -detail "¿Estás seguro de que quieres salir?" -title "Gastos Vampiro" -icon question -type okcancel] == "ok"} {
-		destroy .
-	}
-}
+puts [_cargar_suscripciones]
 
-proc _exportar_pdf {} {
-	tk_messageBox -message "Error" -detail "No implementado" -title "Gastos Vampiro" -icon error
-}
+#set datitos {{nombre {Prime Video} costo 25.0 fecha 17/07/2026} {nombre Netflix costo 32.0 fecha 17/07/2026}}
 
-proc _mostrar_acerca_de {} {
-	tk_messageBox -message "Acerca de Gastos Vampiro" -icon info -detail "Gastos vampiro v1.0\nRastreador de suscripciones que\nchupan tu dinero\nDesarrollado con TCL/TK" -title "Acerca de..."
-}
+#_guarda_suscripciones $datitos
 
-proc _agregar_suscripcion {} {
-
-}
-
-proc _actualizar_tabla {} {
-
-}
-
-proc _eliminar_suscripcion {} {
-
-}
-
-proc _cargar_suscripciones {} {
-
-}
-
-proc _guarda_suscripciones {} {
-	
-}
+#puts [json_parser $datitos]
