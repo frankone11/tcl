@@ -4,6 +4,7 @@ package require Tcl
 package require Tk
 package require json
 package require json::write
+package require pdf4tcl
 
 # ----- Paleta de colores -----
 set BG_MAIN 	"#EEE9FE" ;# Fondo principal lavanda suave
@@ -37,8 +38,96 @@ proc _salir {} {
 	}
 }
 
-proc _exportar_pdf {} {
-	tk_messageBox -message "Error" -detail "No implementado" -title "Gastos Vampiro" -icon error
+proc _exportar_pdf {lista} {
+	if {[llength $::suscripciones] <= 0} {
+		tk_messageBox -message "Sin datos" -detail "No hay suscripciones para exportar." -title "Error PDF" -icon warning
+		return {}
+	}
+
+	set fecha [clock format [clock seconds] -format "%Y%m%d"]
+
+	set types {
+		{{Archivos PDF} .pdf }
+		{{Todos los archivos} *.*}
+	}
+	set ruta [tk_getSaveFile -filetypes $types -parent . -title "Guardar Reporte PDF" -defaultextension .pdf -initialfile "gastos_vampiro_[expr $fecha].pdf"]
+	
+	if {$ruta == ""} {
+		return {}
+	}
+
+	set fecha [clock format [clock seconds] -format "%d/%m/%Y %I:%M %p"]
+
+	pdf4tcl::new mypdf -paper a4 -margin 15mm
+
+	mypdf startPage
+	set width [lindex [mypdf getDrawableArea] 0]
+
+	mypdf setFont 24 Helvetica-Bold
+	mypdf text "Gastos Vampiro" -align center -x [expr {$width/2.0}] -y 12 
+
+	mypdf setFont 11 Helvetica
+	mypdf text "Reporte generado el $fecha" -align center -x [expr {$width/2.0}] -y 60 
+
+	set total 0.0
+
+	for {set i 0} {$i < [llength $lista]} {incr i} {
+		set total [expr $total + {double([dict get [lindex $lista $i] costo])}]
+	}
+
+	mypdf setFont 14 Helvetica-Bold
+	mypdf text "Total Mensual: \$[expr $total] MXN | Total anual \$[expr {$total * 12}] MXN" -align center -x [expr {$width/2.0}] -y 120
+
+	set startX 20
+	set startY 160
+	set rowHeight 15
+	set colWidths {50 200 100 100}
+	set columnas {"#" "Suscripción" "Costo Mensual" "Fecha"}
+	set valores {num nombre costo fecha}
+
+	mypdf setFont 11 Helvetica-Bold
+	mypdf setLineStyle 0.5
+
+	set y $startY
+	set x $startX
+	
+	for {set i 0} {$i < [llength $columnas]} {incr i} {
+	# Draw cell border rectangle
+	mypdf rectangle $x $y [lindex $colWidths $i] $rowHeight
+	# Draw cell text (offset slightly inside the border)
+	mypdf text [lindex $columnas $i] -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
+	# Move to next column
+	set x [expr {$x + [lindex $colWidths $i]}]
+	}
+
+	set y [expr {$y + $rowHeight}]
+
+	mypdf setFont 10 Helvetica
+
+	set j 1
+
+	foreach row $lista {
+		set x $startX
+		for {set i 0} {$i < 4} {incr i} {
+			# Draw cell border rectangle
+			mypdf rectangle $x $y [lindex $colWidths $i] $rowHeight
+
+			# Draw cell text (offset slightly inside the border)
+			if {$i == 0} {
+				mypdf text $j -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
+			} else {
+				mypdf text [dict get $row [lindex $valores $i]] -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
+			}
+			
+			# Move to next column
+			set x [expr {$x + [lindex $colWidths $i]}]
+		}
+		set y [expr {$y + $rowHeight}]
+		incr j 1
+	}
+
+	mypdf write -file $ruta
+	mypdf destroy
 }
 
 proc _mostrar_acerca_de {} {
@@ -217,7 +306,7 @@ menu .mbar
 
 menu .mbar.file -tearoff 0
 
-.mbar.file add command -label "Exportar en PDF" -command {_exportar_pdf} -accelerator "Ctrl+P"
+.mbar.file add command -label "Exportar en PDF" -command {_exportar_pdf $::suscripciones} -accelerator "Ctrl+P"
 .mbar.file add separator
 .mbar.file add command -label "Salir" -command {_salir} -accelerator "Ctrl+Q"
 .mbar add cascade -menu .mbar.file -label "Archivo"
@@ -225,7 +314,7 @@ menu .mbar.file -tearoff 0
 .mbar add command -label "Acerca de" -command {_mostrar_acerca_de}
 
 bind . <Control-q> {_salir}
-bind . <Control-p> {_exportar_pdf}
+bind . <Control-p> {_exportar_pdf $::suscripciones}
 
 # --- Formulario ---
 
