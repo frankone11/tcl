@@ -116,7 +116,9 @@ proc _exportar_pdf {lista} {
 			if {$i == 0} {
 				mypdf text $j -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
 			} else {
-				mypdf text [dict get $row [lindex $valores $i]] -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
+				set dato [dict get $row [lindex $valores $i]]
+				if {$i == 2} {set dato "\$[format "%.2f" $dato] MXN"}
+				mypdf text $dato -x [expr {$x + 3}] -y [expr {$y + $rowHeight - 2.5}]
 			}
 			
 			# Move to next column
@@ -145,7 +147,7 @@ proc _actualizar_tabla {} {
 		for {set i 0} {$i < [llength $::suscripciones]} {incr i} {
 			set costo [expr {double([dict get [lindex $::suscripciones $i] costo])}]
 			set total [expr {$costo + $total}]
-			.frame.frmtabla.frame.tree insert {} end -text "" -values [list [expr {$i + 1}] [dict get [lindex $::suscripciones $i] nombre] $costo [dict get [lindex $::suscripciones $i] fecha] ]
+			.frame.frmtabla.frame.tree insert {} end -text "" -values [list [expr {$i + 1}] [dict get [lindex $::suscripciones $i] nombre] "\$[format "%.2f" $costo] MXN" [dict get [lindex $::suscripciones $i] fecha] ]
 		}
 	} else {
 		place .frame.frmtabla.frame.lbl_vacio -relx 0.5 -rely 0.5 -anchor "center"
